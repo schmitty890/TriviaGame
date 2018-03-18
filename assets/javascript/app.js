@@ -2,12 +2,17 @@
  * [totallyTrivialTrivia object that holds all the functions of the game]
  * @type {Object}
  */
-var intervalId;
-var correct = 0;
-var incorrect = 0;
-var unanswered = 0;
-var clockRunning = false;
-var totallyTrivialTrivia = {
+let intervalId;
+let correct = 0;
+let incorrect = 0;
+let unanswered = 0;
+let clockRunning = false;
+let $question = $('#question');
+let $answerUl = $('.answers ul');
+let $results = $('#results');
+let $time = $('#time');
+let $itemArea = $('.item-area');
+let totallyTrivialTrivia = {
     count: 0,
     time: 31,
     numberOfQuestions: function() {
@@ -174,39 +179,48 @@ var totallyTrivialTrivia = {
      * show the next questions answer choices, and start the timer]
      */
     start: function() {
-        $('.item-area').append('<button class="start">Start</button>');
+        $itemArea.append('<button class="start">Start</button>');
 
         $(document.body).on('click', '.start', function() {
             $(this).remove();
             totallyTrivialTrivia.showQuestion();
-
         });
-
     },
     /**
      * [showAnswerChoices adds the answer choices to the page]
-     * @return {[type]} [description]
      */
     showAnswerChoices: function() {
-        var answerChoices = totallyTrivialTrivia.items[totallyTrivialTrivia.count].answers;
+        let answerChoices = totallyTrivialTrivia.items[totallyTrivialTrivia.count].answers,
+            html = '';
 
-        var html = '';
         answerChoices.forEach(function(element) {
             html += `
                 <li class="answer-choice">` + element + `</li>
             `;
         });
-        $('.answers').find('ul').empty().append(html);
+        $answerUl.empty().append(html);
+    },
+    /**
+     * [getAnswer gets the current answer]
+     */
+    getAnswer: function() {
+        let answer = totallyTrivialTrivia.items[totallyTrivialTrivia.count].answer;
+        return answer;
+    },
+    /**
+     * [getImage gets the current image]
+     */
+    getImage: function() {
+        let image = totallyTrivialTrivia.items[totallyTrivialTrivia.count].image;
+        return image;
     },
     /**
      * [checkAnswer stops the timer, and checks if the user was correct or not]
      * @param  {[string]} choice [user answer selected]
      */
     checkAnswer: function(choice) {
-        var answer = totallyTrivialTrivia.items[totallyTrivialTrivia.count].answer;
-        var image = totallyTrivialTrivia.items[totallyTrivialTrivia.count].image;
-        // stop timer
-
+        let answer = totallyTrivialTrivia.getAnswer(),
+            image = totallyTrivialTrivia.getImage();
         if (answer === choice) {
             totallyTrivialTrivia.userWasCorrect(answer);
         } else {
@@ -217,17 +231,17 @@ var totallyTrivialTrivia = {
      * [outOfTime When the user is out of time, this function is ran]
      */
     outOfTime: function() {
-        var answer = totallyTrivialTrivia.items[totallyTrivialTrivia.count].answer;
-        var image = totallyTrivialTrivia.items[totallyTrivialTrivia.count].image;
-        var html = `
+        let answer = totallyTrivialTrivia.getAnswer(),
+            image = totallyTrivialTrivia.getImage(),
+            html = `
             <div>Out of time!</div>
             <div>The correct answer was: ` + answer + `</div>
             <div><img src="` + image + `"></div>
         `;
         totallyTrivialTrivia.count++;
         unanswered++;
-        $('.answers ul').empty();
-        $('#question').html(html);
+        $answerUl.empty();
+        $question.html(html);
         totallyTrivialTrivia.showTriviaQuestionAgain();
     },
     /**
@@ -236,13 +250,13 @@ var totallyTrivialTrivia = {
      * @param  {[string]} ans [answer]
      */
     userWasCorrect: function(ans) {
-        var image = totallyTrivialTrivia.items[totallyTrivialTrivia.count].image;
-        var html = `
+        let image = totallyTrivialTrivia.getImage(),
+            html = `
             <div>Correct!</div>
             <div><img src="` + image + `"></div>
         `;
-        $('.answers ul').empty();
-        $('#question').html(html);
+        $answerUl.empty();
+        $question.html(html);
         correct++;
         totallyTrivialTrivia.count++;
         totallyTrivialTrivia.stop();
@@ -253,15 +267,15 @@ var totallyTrivialTrivia = {
      * incorrect count, increment the total count, stop the timer, and play another question]
      */
     userWasNotCorrect: function(ans, img) {
-        var image = img;
-        var answer = ans;
-        var html = `
+        let image = img,
+            answer = ans,
+            html = `
             <div>Nope!</div>
             <div>The correct answer was: ` + answer + `</div>
             <div><img src="` + image + `"></div>
         `;
-        $('.answers ul').empty();
-        $('#question').html(html);
+        $answerUl.empty();
+        $question.html(html);
         incorrect++;
         totallyTrivialTrivia.count++;
         totallyTrivialTrivia.stop();
@@ -287,7 +301,7 @@ var totallyTrivialTrivia = {
                 <div>` + question + `</div>
             `;
 
-            $('#question').html(html);
+            $question.html(html);
             totallyTrivialTrivia.showAnswerChoices();
             totallyTrivialTrivia.timer();
             if (!clockRunning) {
@@ -297,20 +311,19 @@ var totallyTrivialTrivia = {
                 clockRunning = true;
             }
         }
-
     },
     /**
      * [timer set up the timer to decrement from 60 seconds]
      */
     timer: function() {
         totallyTrivialTrivia.time--;
-        var currentTime = totallyTrivialTrivia.timeConverter(totallyTrivialTrivia.time);
+        let currentTime = totallyTrivialTrivia.timeConverter(totallyTrivialTrivia.time);
         if (currentTime === '00:00') {
             totallyTrivialTrivia.outOfTime();
             totallyTrivialTrivia.stop();
         }
 
-        $('#time').html(currentTime);
+        $time.html(currentTime);
     },
     /**
      * [stop clear the interval and set clock running to false]
@@ -324,8 +337,8 @@ var totallyTrivialTrivia = {
      * @param  {[num]} t [the current time]
      */
     timeConverter: function(t) {
-        var minutes = Math.floor(t / 60);
-        var seconds = t - (minutes * 60);
+        let minutes = Math.floor(t / 60),
+            seconds = t - (minutes * 60);
 
         if (seconds < 10) {
             seconds = "0" + seconds;
@@ -339,8 +352,11 @@ var totallyTrivialTrivia = {
 
         return minutes + ":" + seconds;
     },
+    /**
+     * [displayResults add the final accumulated results to the page]
+     */
     displayResults: function() {
-        var html = `
+        let html = `
             <div>All done, heres how you did!</div>
             <div>Correct Answers: ` + correct + `</div>
             <div>Incorrect Answers: ` + incorrect + `</div>
@@ -348,8 +364,7 @@ var totallyTrivialTrivia = {
             <div class="start-over">Start Over?</div>
         `;
         $('#question, .answers ul').empty();
-        $('#results').append(html);
-
+        $results.append(html);
     },
     /**
      * [reset resets variables to zero]
@@ -364,12 +379,12 @@ var totallyTrivialTrivia = {
      */
     eventHandlers: function() {
         $(document.body).on('click', '.answer-choice', function() {
-            var userChoice = $(this).text();
+            let userChoice = $(this).text();
             totallyTrivialTrivia.checkAnswer(userChoice);
         });
         $(document.body).on('click', '.start-over', function() {
             totallyTrivialTrivia.count = 0;
-            $('#results').empty();
+            $results.empty();
             totallyTrivialTrivia.reset();
             totallyTrivialTrivia.showQuestion();
         });
